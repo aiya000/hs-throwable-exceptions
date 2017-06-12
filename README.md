@@ -8,6 +8,7 @@ throwable-exceptions gives the exception's value constructors for your haskell p
 ## Document is available in here
 
 - [throwable-exceptions - Hackage](https://hackage.haskell.org/package/throwable-exceptions)
+- [the simulation of the use case](https://github.com/aiya000/hs-throwable-exceptions/blob/master/test/Control/Exception/ThrowableTest.hs)
 
 
 # :muscle: Why we should use this ? :muscle:
