@@ -42,3 +42,7 @@ main = do
 
 But you have not to define a specific exception yourself
 if you use this :muscle:
+
+
+# :+1:
+PR is welcome !
