@@ -13,8 +13,8 @@ build-type:          Simple
 cabal-version:       >=1.10
 extra-source-files:  README.md
 
-executable throwable-exceptions
+library
   hs-source-dirs:      src
-  main-is:             Main.hs
   default-language:    Haskell2010
+  ghc-options:         -Wall -Wno-name-shadowing -Wno-unused-do-bind -Wunused-top-binds
   build-depends:       base >= 4.7 && < 5
