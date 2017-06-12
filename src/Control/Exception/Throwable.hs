@@ -1,5 +1,6 @@
 module Control.Exception.Throwable
   ( IOException' (..)
+  , IllegalArgumentException (..)
   ) where
 
 import Control.Exception.Safe (Exception)
