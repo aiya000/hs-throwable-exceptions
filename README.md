@@ -1,6 +1,10 @@
 # :diamonds: throwable-exceptions :diamonds:
 throwable-exceptions gives the exception's value constructors for your haskell project :dog:
 
+## Available in
+
+- [![Hackage](https://img.shields.io/hackage/v/lens.svg)](https://hackage.haskell.org/package/throwable-exceptions)
+
 
 # :muscle: Why we should use this ? :muscle:
 The situation that we want to throw the specific exception is happened frequently,
