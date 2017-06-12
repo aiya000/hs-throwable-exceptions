@@ -5,6 +5,11 @@
 throwable-exceptions gives the exception's value constructors for your haskell project :dog:
 
 
+## Document is available in here
+
+- [throwable-exceptions - Hackage](https://hackage.haskell.org/package/throwable-exceptions)
+
+
 # :muscle: Why we should use this ? :muscle:
 The situation that we want to throw the specific exception is happened frequently,
 but many general exceptions are not given by base.
