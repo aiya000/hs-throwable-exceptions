@@ -17,4 +17,6 @@ library
   hs-source-dirs:      src
   default-language:    Haskell2010
   ghc-options:         -Wall -Wno-name-shadowing -Wno-unused-do-bind -Wunused-top-binds
+  exposed-modules:     Control.Exception.Throwable
   build-depends:       base >= 4.7 && < 5
+                     , safe-exceptions
