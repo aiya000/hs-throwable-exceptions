@@ -1,9 +1,8 @@
 # :diamonds: throwable-exceptions :diamonds:
+[![Build Status](https://travis-ci.org/aiya000/hs-throwable-exceptions.svg?branch=master)](https://travis-ci.org/aiya000/hs-throwable-exceptions)
+[![Hackage](https://img.shields.io/hackage/v/lens.svg)](https://hackage.haskell.org/package/throwable-exceptions)
+
 throwable-exceptions gives the exception's value constructors for your haskell project :dog:
-
-## Available in
-
-- [![Hackage](https://img.shields.io/hackage/v/lens.svg)](https://hackage.haskell.org/package/throwable-exceptions)
 
 
 # :muscle: Why we should use this ? :muscle:
