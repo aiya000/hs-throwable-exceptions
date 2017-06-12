@@ -24,35 +24,33 @@ test_io_exception_prim =
   [ testCase "can be shown in most cases" $
       canBeShown $ ET.ioException' "honoka-chan!" -- IOException' can be shown, because IOException' is an Exception instance
   , testCase "can be thrown in all case" $
-      canBeThrown $ ET.ioException' "kotori-chan ga!" -- IOException' can be thrown by throwM, because  IOException' is an Exception instance !
+      canBeThrown $ ET.ioException' "kotori-chan ga!" -- IOException' can be thrown by throwM, because IOException' is an Exception instance !
   ]
 
 
-test_illegal_argument_exception :: [TestTree]
-test_illegal_argument_exception =
-  [ testCase "can be shown in most cases" $
-      canBeShown $ ET.illegalArgumentException "umi-chan!"
-  , testCase "finds the perpetrator with the clue" $
-      program -- You can find the perpetrator of some bug if you see the message ('.. is looked like bad')
+test_index_out_of_bounds_exception :: [TestTree]
+test_index_out_of_bounds_exception =
+  [ testCase "finds the perpetrator with the clue" $
+      program -- You can find the perpetrator of some bug if you see the message ('.. looks like bad')
   ]
   where
     program :: IO ()
     program = do
       case someCalculation of 
         Right _ -> putStrLn "the calculation is succeed"
-        Left e ->
-          case fromException' e of
-            Nothing -> putStrLn "!? I don't know !"
-            Just (ET.IllegalArgumentException _ clue) -> putStrLn $ show clue ++ " is looked like bad"
+        Left e -> case fromException' e of
+          Nothing -> putStrLn "!? I don't know !"
+          Just (ET.IndexOutOfBoundsException _ clue) -> putStrLn $ show clue ++ " looks like bad"
 
-    fromException' :: SomeException -> Maybe (ET.IllegalArgumentException (Int, Int))
+    -- monomorphic function
+    fromException' :: SomeException -> Maybe (ET.IndexOutOfBoundsException ([Int], Int))
     fromException' = fromException
 
-    div' :: MonadThrow m => Int -> Int -> m Int
-    x `div'` 0 = throwM $ ET.IllegalArgumentException "0 is not available in div'" (x, 0 :: Int)
-    x `div'` y = return $ x `div` y
+    at :: MonadThrow m => [Int] -> Int -> m Int
+    xs `at` i | length xs <= i = throwM $ ET.IndexOutOfBoundsException "mmm..?" (xs, i)
+              | otherwise      = return $ xs !! i
 
-    someCalculation = 10 `div'` 0
+    someCalculation = [10..13] `at` 4
 
 
 test_general_exception :: [TestTree]

@@ -5,6 +5,8 @@ module Control.Exception.Throwable
   , illegalArgumentException
   , GeneralException (..)
   , generalException
+  , IndexOutOfBoundsException (..)
+  , indexOutOfBoundsException
   ) where
 
 import Control.Exception.Safe (Exception)
@@ -37,6 +39,19 @@ instance (Typeable a, Show a) => Exception (IllegalArgumentException a)
 -- | A constructor for IllegalArgumentException but doesn't take the clue
 illegalArgumentException :: String -> IllegalArgumentException ()
 illegalArgumentException = flip IllegalArgumentException ()
+
+
+-- | Like java.lang.IndexOutOfBoundsException
+data IndexOutOfBoundsException a = IndexOutOfBoundsException { indexOutOfBoundsCause :: String, indexOutOfBoundsArgumentClue :: a }
+
+instance Show a => Show (IndexOutOfBoundsException a) where
+  show (IndexOutOfBoundsException cause  _) = "IndexOutOfBoundsException: " ++ show cause
+
+instance (Typeable a, Show a) => Exception (IndexOutOfBoundsException a)
+
+-- | A constructor for IndexOutOfBoundsException but doesn't take the clue
+indexOutOfBoundsException :: String -> IndexOutOfBoundsException ()
+indexOutOfBoundsException = flip IndexOutOfBoundsException ()
 
 
 -- | An other of these exceptions
