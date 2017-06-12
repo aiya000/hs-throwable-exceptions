@@ -4,7 +4,7 @@ import Control.Exception.Safe (Exception)
 import Control.Exception.Safe (MonadThrow, throwM, fromException, SomeException)
 import Data.Either (isLeft)
 import Test.Tasty (TestTree)
-import Test.Tasty.HUnit (testCase, Assertion, assertBool)
+import Test.Tasty.HUnit (testCase, Assertion, assertBool, (@?=))
 import qualified Control.Exception.Throwable as ET
 
 
@@ -26,6 +26,7 @@ test_io_exception_prim =
   , testCase "can be thrown in all case" $
       canBeThrown $ ET.ioException' "kotori-chan ga!" -- IOException' can be thrown by throwM, because  IOException' is an Exception instance !
   ]
+
 
 test_illegal_argument_exception :: [TestTree]
 test_illegal_argument_exception =
@@ -52,3 +53,10 @@ test_illegal_argument_exception =
     x `div'` y = return $ x `div` y
 
     someCalculation = 10 `div'` 0
+
+
+test_general_exception :: [TestTree]
+test_general_exception =
+  [ testCase "looks like other exception when GeneralException is executed `show`" $
+      show (ET.generalException "MyTest" "nico-chan")  @?= "MyTestException: nico-chan"
+  ]

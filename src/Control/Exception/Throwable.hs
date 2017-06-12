@@ -3,6 +3,8 @@ module Control.Exception.Throwable
   , ioException'
   , IllegalArgumentException (..)
   , illegalArgumentException
+  , GeneralException (..)
+  , generalException
   ) where
 
 import Control.Exception.Safe (Exception)
@@ -24,7 +26,7 @@ ioException' :: String -> IOException' ()
 ioException' = flip IOException' ()
 
 
--- Like java.lang.IllegalArgumentException
+-- | Like java.lang.IllegalArgumentException
 data IllegalArgumentException a = IllegalArgumentException { illegalArgumentCause :: String, illegalArgumentClue :: a }
 
 instance Show a => Show (IllegalArgumentException a) where
@@ -37,3 +39,18 @@ illegalArgumentException :: String -> IllegalArgumentException ()
 illegalArgumentException = flip IllegalArgumentException ()
 
 
+-- | An other of these exceptions
+data GeneralException a = GeneralException
+  { exceptionName  :: String -- ^ This should be named by 'PascalCase' for show, for example: "MyOperation", "Database"
+  , exceptionCause :: String -- ^ The message for the cause of the exception
+  , exceptionClue  :: a      -- ^ The clue of the exception. This can be anything of Show instance
+  }
+
+instance Show a => Show (GeneralException a) where
+  show (GeneralException name cause _) = name ++ "Exception: " ++ cause
+
+instance (Typeable a, Show a) => Exception (GeneralException a)
+
+-- | A constructor for GeneralException but doesn't take the clue
+generalException :: String -> String -> GeneralException ()
+generalException name cause = GeneralException name cause () 
