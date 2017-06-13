@@ -1,3 +1,11 @@
+-- |
+-- The mostly exceptions has the field for its cause, and its clue.
+--
+-- The cause is the message.
+--
+-- The clue is some stuff for find bugs,
+-- the clue can be omitted if you don't need it.
+-- (e.g. @ioException'@, @illegalArgumentException@)
 module Control.Exception.Throwable
   ( IOException' (..)
   , ioException'
