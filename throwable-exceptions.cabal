@@ -1,5 +1,5 @@
 name:                throwable-exceptions
-version:             0.1.0.3
+version:             0.1.0.4
 synopsis:            throwable-exceptions gives the exception's value constructors
 description:         throwable-exceptions gives the exception's value constructors
 homepage:            https://github.com/aiya000/hs-throwable-exceptions#README.md
