@@ -2,46 +2,66 @@
 [![Build Status](https://travis-ci.org/aiya000/hs-throwable-exceptions.svg?branch=master)](https://travis-ci.org/aiya000/hs-throwable-exceptions)
 [![Hackage](https://img.shields.io/hackage/v/lens.svg)](https://hackage.haskell.org/package/throwable-exceptions)
 
-throwable-exceptions gives the exception's value constructors for your haskell project :dog:
+throwable-exceptions gives the easy way to create the data types of `Exception` instance with TemplateHaskell,
+and gives the simple data types of `Exception` instance with its value constructor,
+for your haskell project :dog:
+
+- `throwable-exceptions` is available in
+    - [Hackage](https://hackage.haskell.org/package/throwable-exceptions)
+    - [stackage (nightly build)](https://www.stackage.org/nightly-2017-06-18/package/throwable-exceptions)
 
 
-## Document is available in here
+## :books: Document is available in here :books:
 
 - [throwable-exceptions - Hackage](https://hackage.haskell.org/package/throwable-exceptions)
-- [the simulation of the use case](https://github.com/aiya000/hs-throwable-exceptions/blob/master/test/Control/Exception/ThrowableTest.hs)
 
 
 # :muscle: Why we should use this ? :muscle:
-The situation that we want to throw the specific exception is happened frequently,
-but many general exceptions are not given by base.
+We want to throw some exception frequently, but the mostly throwable exceptions are not given by base.  
+throwable-exceptions complements it :+1:
 
-For example, [IOException](https://hackage.haskell.org/package/base-4.9.1.0/docs/Control-Exception.html#t:IOException)'s value constructor is not given.
+
+## Examples
+
+- vvv  The summary of the exact examples is available here  vvv
+    - [example/Main.hs](https://github.com/aiya000/throwable-exceptions/blob/master/example/Main.hs)
+
+- - -
+
+You can create a data type of `Exception` instance by **a line** :exclamation:
 
 ```haskell
-import Control.Exception.Safe (MonadThrow, throwM, IOException(..), try, Exception, SomeException)
-import Control.Monad.IO.Class (MonadIO, liftIO)
-import Control.Monad.Trans.Either (runEitherT)
+module Main where
 
-readFileOrError :: (MonadThrow m, MonadIO m) => FilePath -> m String
-readFileOrError path = do
-  xOrErr <- liftIO . try $ readFile path
-  case xOrErr of
-    Left e -> throwM . IOException $ show (e :: SomeException)
-    Right a -> return a
+declareException "MyException"
+-- ^^^
+-- This is same to write below line yourself
+--     data MyException a = MyException
+--      { myExceptionCause :: String
+--      , MyExceptionClue  :: a --      } deriving (Show, Typeable)
+--     instance (Typeable a, Show a) => Exception (MyException a)
 
 main :: IO ()
 main = do
-  xOrErr <- runEitherT $ readFileOrError "Main.hs"
-  case xOrErr of
-    Left e -> putStrLn $ "oops: " ++ show (e :: SomeException)
-    Right a -> putStrLn a
-
--- Result output vv
--- Data constructor not in scope: IOException :: [Char] -> e1
+  print $ MyException "hi" 10
+  print $ myException "poi"
 ```
 
-But you have not to define a specific exception yourself
-if you use this :muscle:
+- - -
+
+Several exception is defined by default :smile:
+
+For example, [IOException](https://hackage.haskell.org/package/base-4.9.1.0/docs/Control-Exception.html#t:IOException)'s value constructor is not given :cry:  
+But you can use `Control.Exception.Throwable.IOException'` instead :dog:
+
+```haskell
+module Main where
+
+main :: IO ()
+main = do
+  throwM $ IOException' "oops!" "in main"
+  throwM $ ioException' "oops!"
+```
 
 
 # :+1:
