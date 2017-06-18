@@ -24,13 +24,14 @@ throwable-exceptions complements it :+1:
 ## Examples
 
 - vvv  The summary of the exact examples is available here  vvv
-    - [example/Main.hs](https://github.com/aiya000/throwable-exceptions/blob/master/example/Main.hs)
+    - [example/Main.hs](https://github.com/aiya000/hs-throwable-exceptions/blob/master/example/Main.hs)
 
 - - -
 
 You can create a data type of `Exception` instance by **a line** :exclamation:
 
 ```haskell
+{-# LANGUAGE TemplateHaskell #-}
 module Main where
 
 declareException "MyException"
