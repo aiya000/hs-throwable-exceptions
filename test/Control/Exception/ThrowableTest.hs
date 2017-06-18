@@ -56,5 +56,5 @@ test_index_out_of_bounds_exception =
 test_general_exception :: [TestTree]
 test_general_exception =
   [ testCase "looks like other exception when GeneralException is executed `show`" $
-      show (ET.generalException "MyTest" "nico-chan")  @?= "MyTestException: nico-chan"
+      show (ET.generalException "MyTestException" "nico-chan")  @?= "MyTestException: nico-chan"
   ]
