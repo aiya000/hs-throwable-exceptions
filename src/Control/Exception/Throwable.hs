@@ -38,7 +38,7 @@ instance (Typeable a, Show a) => Exception (GeneralException a)
 
 -- | A constructor for GeneralException but doesn't take the clue
 generalException :: String -> String -> GeneralException ()
-generalException name cause = GeneralException name cause () 
+generalException name cause = GeneralException name cause ()
 
 
 declareException "IOException'"

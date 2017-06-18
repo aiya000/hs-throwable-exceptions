@@ -111,7 +111,6 @@ declareException exceptionName = do
   showInstanceDec     <- defineShowInstanceFor typeNames
   exceptionInstancDec <- defineExceptionInstanceFor typeNames
   fakeConstructorDec  <- defineFakeConstructorFor typeNames
-
   return [ dataDec
          , showInstanceDec
          , exceptionInstancDec
