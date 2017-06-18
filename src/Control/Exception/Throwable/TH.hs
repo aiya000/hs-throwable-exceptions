@@ -160,7 +160,7 @@ declareException exceptionName = do
 
     -- Define an instance of a data of @ExceptionDataNames@ for @Exception@.
     defineExceptionInstanceFor :: ExceptionDataNames -> Q Dec
-    defineExceptionInstanceFor exceptionDataNames@(ExceptionDataNames {..}) = do
+    defineExceptionInstanceFor ExceptionDataNames {..} = do
       let typeableClass  = mkName "Typeable"
           showClass      = mkName "Show"
           exceptionClass = mkName "Exception"
