@@ -2,8 +2,8 @@
 [![Build Status](https://travis-ci.org/aiya000/hs-throwable-exceptions.svg?branch=master)](https://travis-ci.org/aiya000/hs-throwable-exceptions)
 [![Hackage](https://img.shields.io/hackage/v/lens.svg)](https://hackage.haskell.org/package/throwable-exceptions)
 
-throwable-exceptions gives the easy way to create the data types of `Exception` instance with TemplateHaskell,
-and gives the simple data types of `Exception` instance with its value constructor,
+`throwable-exceptions` gives an easy way to create the data types of `Exception` instance with [TemplateHaskell](https://wiki.haskell.org/Template_Haskell),
+and gives simple data types of `Exception` instance with its value constructor,
 for your haskell project :dog:
 
 - `throwable-exceptions` is available in
@@ -16,9 +16,9 @@ for your haskell project :dog:
 - [throwable-exceptions - Hackage](https://hackage.haskell.org/package/throwable-exceptions)
 
 
-# :muscle: Why we should use this ? :muscle:
-We want to throw some exception frequently, but the mostly throwable exceptions are not given by base.  
-throwable-exceptions complements it :+1:
+# :muscle: Why should we use this ? :muscle:
+We want to throw some exception frequently, but the mostly throwable exceptions are not given by `base`.  
+`throwable-exceptions` complements it :+1:
 
 
 ## Examples
@@ -50,7 +50,7 @@ main = do
 
 - - -
 
-Several exception is defined by default :smile:
+Several exceptions are defined by default :smile:
 
 For example, [IOException](https://hackage.haskell.org/package/base-4.9.1.0/docs/Control-Exception.html#t:IOException)'s value constructor is not given :cry:  
 But you can use `Control.Exception.Throwable.IOException'` instead :dog:
