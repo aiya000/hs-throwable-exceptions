@@ -32,7 +32,7 @@ data GeneralException a = GeneralException
   }
 
 instance Show a => Show (GeneralException a) where
-  show (GeneralException name cause _) = name ++ "Exception: " ++ cause
+  show (GeneralException name cause _) = name ++ ": " ++ cause
 
 instance (Typeable a, Show a) => Exception (GeneralException a)
 
