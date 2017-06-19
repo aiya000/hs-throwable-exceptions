@@ -1,5 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
+-- | This is referenced from README.md
 module Main where
 
 import Control.Exception.Safe (throwM, MonadCatch, catch, SomeException)
@@ -16,11 +17,33 @@ import Data.Typeable (Typeable)
 --
 -- data MyException a = MyException
 --  { myExceptionCause :: String
---  , MyExceptionClue  :: a
---  } deriving (Show, Typeable)
+--  , myExceptionClue  :: a
+--  } deriving (Typeable)
+--
+-- instance Show a => Show (MyException a) where
+--  ...
 -- instance (Typeable a, Show a) => Exception (MyException a)
 --
-declareException "MyException"
+declareException "MyException" ["MyException"]
+-- ^ the second argument (the list of String) will be made as a value constructor.
+
+-- This is same as
+--
+-- data TwoException a =
+--  FirstException
+--    { firstExceptionCause :: String
+--    , firstExceptionClue  :: a
+--    } |
+--  SecondException
+--    { secondExceptionCause :: String
+--    , secondExceptionClue  :: a
+--    } deriving (Typeable)
+--
+-- instance Show a => (TwoException a) where
+--  ...
+-- instance (Typeable a, Show a) => Exception (TwoException a)
+--
+declareException "TwoException" ["FirstException", "SecondException"]
 
 
 main :: IO ()
@@ -28,7 +51,12 @@ main = do
   print $ ([1..4] `at` 5 :: Either SomeException Int)
   print $ MyException "hi" 10
   print $ myException "poi"
+  -- ^ a (fake) value constructor,
+  -- this is same as `MyException` but without a clue value.
   print (foo :: Either SomeException Int)
+  print $ FirstException "chino" 20
+  print $ firstException "cocoa"
+  print $ secondException "rize"
 --
 -- vvv  output result  vvv
 --

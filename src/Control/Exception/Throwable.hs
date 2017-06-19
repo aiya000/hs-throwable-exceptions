@@ -41,6 +41,6 @@ generalException :: String -> String -> GeneralException ()
 generalException name cause = GeneralException name cause ()
 
 
-declareException "IOException'"
-declareException "IndexOutOfBoundsException"
-declareException "IllegalArgumentException"
+declareException "IOException'" ["IOException'", "FileNotFoundException"]
+declareException "IndexOutOfBoundsException" ["IndexOutOfBoundsException"]
+declareException "IllegalArgumentException" ["IllegalArgumentException"]

@@ -13,14 +13,15 @@ import Test.Tasty (TestTree)
 import Test.Tasty.HUnit (testCase, Assertion)
 import qualified Control.Exception.Throwable.TH as ETH
 
-ETH.declareException "THTestException"
+ETH.declareException "TestException" ["FirstException", "SecondException"]
+
 
 -- Indicate `e ()` is Exception instance in the compile time
 type IsException e = (Show (e ()), Typeable (e ()), Exception (e ())) => e ()
 
+typing :: IsException a
+typing = undefined
 
-refl :: IsException a
-refl = undefined
 
 through :: a -> Assertion
 through = void . return
@@ -33,5 +34,8 @@ test_doctest =
 
 test_generated_datatype :: [TestTree]
 test_generated_datatype =
-  [ testCase "is Exception instance" $ through (refl :: IsException THTestException)
+  [ testCase "is Exception instance" $ through (typing :: IsException TestException)
+  , testCase "is sum type" $ do
+      through $ FirstException "hono" 10
+      through $ secondException "koto"
   ]

@@ -10,31 +10,178 @@ module Control.Exception.Throwable.TH
   ) where
 
 import Data.Char (toLower, isUpper, isPunctuation, isNumber)
-import Language.Haskell.TH ( Bang(..), DecsQ, newName, mkName
-                           , Dec(..), TyVarBndr(..), Con(..), Type(..)
-                           , SourceUnpackedness(..), SourceStrictness(..)
-                           , Q, Name, Exp(..)
-                           , Lit(..), Pat(..), Clause(..), Body(..)
-                           )
+import Language.Haskell.TH ( Bang(..), DecsQ, newName, mkName, Dec(..), TyVarBndr(..), Con(..), Type(..), SourceUnpackedness(..), SourceStrictness(..), Q, Name, Exp(..), Lit(..), Pat(..), Clause(..), Body(..))
 
 -- |
+-- Mean names of a data type and its value constructors
+--
 -- @
--- data IOException' a = IOException
---   { ioExceptionCause :: String
---   , ioExceptionClue  :: a
---   }
--- ==> do
---   a <- newName "a"
---   ExceptionDataNames { typeName        = mkName "IOException'"
---                      , causeRecordName = mkName "ioExceptionCause"
---                      , clueRecordName  = mkName "ioExceptionClue"
---                      }
+-- data IOException' a =
+--   IOException'
+--     { ioExceptionCause :: String
+--     , ioExceptionClue  :: a
+--     } |
+--   FileNotFoundException
+--     { fileNotFoundExceptionCause :: String
+--     , fileNotFoundExceptionClue  :: a
+--     }
+-- ==>
+--   DatatypeNames
+--     { typeName     = mkName "IOException'"
+--     , constructors =
+--       [ ValueConstructor
+--         { constrName      = "IOException'"
+--         , causeRecordName = mkName "ioExceptionCause"
+--         , clueRecordName  = mkName "ioExceptionClue"
+--         }
+--       , ValueConstructor
+--         { constrName      = "FileNotFoundException"
+--         , causeRecordName = mkName "fileNotFoundExceptionCause"
+--         , clueRecordName  = mkName "fileNotFoundExceptionClue"
+--         }
+--       ]
+--     }
 -- @
-data ExceptionDataNames = ExceptionDataNames
-  { typeName        :: String
+data DatatypeNames = DatatypeNames
+  { datatypeName :: DatatypeName
+  , constructors :: [ValueConstructor]
+  } deriving (Show)
+
+-- | Mean a name of a value constructor and its records
+data ValueConstructor = ValueConstructor
+  { constructorName :: ValueConstructorName
   , causeRecordName :: String
   , clueRecordName  :: String
-  }
+  } deriving (Show)
+
+type DatatypeName = String
+type ValueConstructorName = String
+
+
+-- |
+-- Create the value of @DatatypeNames@ by the type name.
+-- That type name will be executed the instantiation for @Exception@.
+--
+-- @typeName@ and @constrNames@ elements must be non empty string.
+-- If it is given, create Nothing.
+getDatatypeNames :: DatatypeName -> [ValueConstructorName] -> Maybe DatatypeNames
+getDatatypeNames "" _                 = Nothing
+getDatatypeNames typeName constrNames = fmap (DatatypeNames typeName) $ mapM toValueConstructorName constrNames
+  where
+    toValueConstructorName :: ValueConstructorName -> Maybe ValueConstructor
+    toValueConstructorName [] = Nothing
+    toValueConstructorName constrName@(c:onstrName) =
+      let constrName' = (toLower c) : onstrName -- camelCase
+      in Just ValueConstructor { constructorName = constrName
+                               , causeRecordName = constrName' ++ "Cause"
+                               , clueRecordName  = constrName' ++ "Clue"
+                               }
+
+
+-- | A natural strategy of the evaluation
+noBang :: Bang
+noBang = Bang NoSourceUnpackedness NoSourceStrictness
+
+
+-- |
+-- Declare simple concrete exception data type in the compile time.
+--
+-- If the empty list is given to @constrNames@, create empty data type.
+--
+-- @typeName@ and @constrNames@ must be PascalCase
+-- (e.g> "IOException'", "IndexOutOfBoundsException". NG> "ioException'", "indexOutOfBoundsException") .
+declareException :: DatatypeName -> [ValueConstructorName] -> DecsQ
+declareException typeName constrNames = do
+  case getDatatypeNames typeName constrNames of
+    Nothing        -> fail "Data.Exception.Throwable.TH.declareException requires non empty string for `typeName`"
+    Just typeNames -> do
+      typeParam <- newName "a" -- type `a` of `data FooException a`
+      let dataDec = defineDatatype typeNames typeParam
+      showInstanceDec     <- defineShowInstanceFor typeNames
+      exceptionInstancDec <- defineExceptionInstanceFor typeNames
+      fakeConstructorDecs <- mapM defineFakeConstructor $ constructors typeNames
+      return $ [ dataDec
+               , showInstanceDec
+               , exceptionInstancDec
+               ] ++ fakeConstructorDecs
+  where
+    -- Define a data of an exception.
+    -- the data is defined by @DatatypeNames@.
+    defineDatatype :: DatatypeNames -> Name -> Dec
+    defineDatatype (DatatypeNames {..}) a =
+      let exception   = mkName datatypeName
+          constrsCons = map (flip makeValueConstructorsCon a) constructors
+      in DataD []
+        exception [PlainTV a] Nothing
+        constrsCons []
+
+    -- Make @Con@ from @ValueConstructor@ for @defineDatatype@
+    -- @a@ is @defineDatatype@'s datatype's type parameter.
+    makeValueConstructorsCon :: ValueConstructor -> Name -> Con
+    makeValueConstructorsCon (ValueConstructor {..}) a =
+      let constructor = mkName constructorName
+          causeRecord = mkName causeRecordName
+          clueRecord  = mkName clueRecordName
+      in RecC constructor [ (causeRecord, noBang, ConT $ mkName "String")
+                          , (clueRecord, noBang, VarT a)
+                          ]
+
+    -- Define an instance of a data of @DatatypeNames@ for @Show@.
+    defineShowInstanceFor :: DatatypeNames -> Q Dec
+    defineShowInstanceFor dataTypeNames@(DatatypeNames {..}) = do
+      let showClass = mkName "Show"
+          exception = mkName typeName
+      a <- newName "a"
+      showFuncDec <- declareShowFunc dataTypeNames
+      return $ InstanceD Nothing
+        [AppT (ConT showClass) (VarT a)]
+        (AppT (ConT showClass) (AppT (ConT exception) (VarT a)))
+        [showFuncDec]
+
+    -- Make a @show@ function definition.
+    declareShowFunc :: DatatypeNames -> Q Dec
+    declareShowFunc DatatypeNames {..} = do
+      let showFunc = mkName "show"
+      showFuncClauses <- mapM (flip makeShowFuncClause showFunc) constructors
+      return $ FunD showFunc showFuncClauses
+      where
+        -- Make patterns of @show@ function (@showFunc@) implementation,
+        -- for @constructors@ of @DatatypeNames@.
+        makeShowFuncClause :: ValueConstructor -> Name -> Q Clause
+        makeShowFuncClause (ValueConstructor {..}) showFunc = do
+          let constructor = mkName constructorName
+          cause <- newName "cause"
+          return $ Clause [ConP constructor [VarP cause, WildP]] -- (FooException cause _) =
+            (NormalB
+                (InfixE (Just . LitE . StringL $ typeName ++ ": ") (VarE $ mkName "++") (Just $ AppE (VarE showFunc) (VarE cause))) -- show ("FooException: " ++ show cause)
+            ) []
+
+    -- Define an instance of a data of @DatatypeNames@ for @Exception@.
+    defineExceptionInstanceFor :: DatatypeNames -> Q Dec
+    defineExceptionInstanceFor DatatypeNames {..} = do
+      let typeableClass  = mkName "Typeable"
+          showClass      = mkName "Show"
+          exceptionClass = mkName "Exception"
+          exception      = mkName typeName
+      a <- newName "a"
+      return $ InstanceD Nothing
+        [ AppT (ConT typeableClass) (VarT a)
+        , AppT (ConT showClass) (VarT a)
+        ]
+        (AppT (ConT exceptionClass) (AppT (ConT exception) (VarT a)))
+        []
+
+    -- Define the casual data constructor.
+    -- Like @Control.Exception.Throwable.generalException@ without name field.
+    defineFakeConstructor :: ValueConstructor -> Q Dec
+    defineFakeConstructor ValueConstructor {..} = do
+      let fConstructor = mkName $ pascalToCamelCase constructorName
+          constructor  = mkName constructorName
+      a <- newName "a"
+      return $ FunD fConstructor [
+          Clause [VarP a] (NormalB $ AppE (AppE (ConE constructor) (VarE a)) (TupE []))
+          []
+        ]
 
 
 -- |
@@ -94,105 +241,3 @@ pascalToCamelCase pascalCase
       let (p:ascalCase) = pascalCase
           p'            = toLower p
       in p' : ascalCase
-
-
--- |
--- Declare simple concrete exception datat type in the compile time.
---
--- @exceptionName@ must be PascalCase
--- (e.g> "IOException'", "IndexOutOfBoundsException". NG> "ioException'", "indexOutOfBoundsException") .
---
--- And @exceptionName@ should have the suffix of "Exception".
-declareException :: String -> DecsQ
-declareException exceptionName = do
-  typeParam <- newName "a"
-  let typeNames   = getTypeNames exceptionName
-      dataDec     = defineDatatype typeNames typeParam
-  showInstanceDec     <- defineShowInstanceFor typeNames
-  exceptionInstancDec <- defineExceptionInstanceFor typeNames
-  fakeConstructorDec  <- defineFakeConstructorFor typeNames
-  return [ dataDec
-         , showInstanceDec
-         , exceptionInstancDec
-         , fakeConstructorDec
-         ]
-  where
-    -- The natural strategy of the evaluation
-    noBang :: Bang
-    noBang = Bang NoSourceUnpackedness NoSourceStrictness
-
-    -- Create the value of @ExceptionDataNames@ by the type name.
-    -- That type name will be executed the instantiation for @Exception@.
-    getTypeNames :: String -> ExceptionDataNames
-    getTypeNames exceptionName =
-      let (e:xceptionName)   = exceptionName  --TODO: Guard empty pattern
-          camelExceptionName = (toLower e) : xceptionName
-      in ExceptionDataNames { typeName        = exceptionName
-                            , causeRecordName = camelExceptionName ++ "Cause"
-                            , clueRecordName  = camelExceptionName ++ "Clue"
-                            }
-
-    -- Define a data of an exception.
-    -- the data is defined by @ExceptionDataNames@.
-    defineDatatype :: ExceptionDataNames -> Name -> Dec
-    defineDatatype (ExceptionDataNames {..}) a =
-      let exception   = mkName typeName
-          causeRecord = mkName causeRecordName
-          clueRecord  = mkName clueRecordName
-      in DataD []
-        exception [PlainTV a] Nothing
-        [ RecC exception [ (causeRecord, noBang, ConT $ mkName "String")
-                         , (clueRecord, noBang, VarT a)
-                         ]
-        ] []
-
-    -- Define an instance of a data of @ExceptionDataNames@ for @Show@.
-    defineShowInstanceFor :: ExceptionDataNames -> Q Dec
-    defineShowInstanceFor exceptionDataNames@(ExceptionDataNames {..}) = do
-      let showClass = mkName "Show"
-          exception = mkName typeName
-      a <- newName "a"
-      showImpl <- declareShowFunc exceptionDataNames
-      return $ InstanceD Nothing
-        [AppT (ConT showClass) (VarT a)]
-        (AppT (ConT showClass) (AppT (ConT exception) (VarT a)))
-        [showImpl]
-
-    -- Define an instance of a data of @ExceptionDataNames@ for @Exception@.
-    defineExceptionInstanceFor :: ExceptionDataNames -> Q Dec
-    defineExceptionInstanceFor ExceptionDataNames {..} = do
-      let typeableClass  = mkName "Typeable"
-          showClass      = mkName "Show"
-          exceptionClass = mkName "Exception"
-          exception      = mkName typeName
-      a <- newName "a"
-      return $ InstanceD Nothing
-        [ AppT (ConT typeableClass) (VarT a)
-        , AppT (ConT showClass) (VarT a)
-        ]
-        (AppT (ConT exceptionClass) (AppT (ConT exception) (VarT a)))
-        []
-
-    -- Define @show@ function implementation for @defineShowInstanceFor@.
-    declareShowFunc :: ExceptionDataNames -> Q Dec
-    declareShowFunc ExceptionDataNames {..} = do
-      let exception = mkName typeName
-          showFunc  = mkName "show"
-      cause <- newName "cause"
-      return $ FunD showFunc [ -- show
-          Clause [ConP exception [VarP cause, WildP]] (NormalB -- (FooException cause _) =
-            (InfixE (Just . LitE . StringL $ typeName ++ ": ") (VarE $ mkName "++") (Just $ AppE (VarE showFunc) (VarE cause))) -- show ("FooException: " ++ show cause)
-          ) []
-        ]
-
-    -- Define the casual data constructor.
-    -- Like @Control.Exception.Throwable.generalException@ without name field.
-    defineFakeConstructorFor :: ExceptionDataNames -> Q Dec
-    defineFakeConstructorFor ExceptionDataNames {..} = do
-      let fConstructor = mkName $ pascalToCamelCase exceptionName
-          exception    = mkName typeName
-      a <- newName "a"
-      return $ FunD fConstructor [
-          Clause [VarP a] (NormalB $ AppE (AppE (ConE exception) (VarE a)) (TupE []))
-          []
-        ]

@@ -34,19 +34,45 @@ You can create a data type of `Exception` instance by **a line** :exclamation:
 {-# LANGUAGE TemplateHaskell #-}
 module Main where
 
-declareException "MyException"
--- ^^^
--- This is same to write below line yourself
---     data MyException a = MyException
---      { myExceptionCause :: String
---      , MyExceptionClue  :: a --      } deriving (Show, Typeable)
---     instance (Typeable a, Show a) => Exception (MyException a)
+-- This is same as
+--
+-- data MyException a = MyException
+--  { myExceptionCause :: String
+--  , myExceptionClue  :: a
+--  } deriving (Show, Typeable)
+-- instance (Typeable a, Show a) => Exception (MyException a)
+--
+declareException "MyException" ["MyException"]
+
+-- This is same as
+--
+-- data TwoException a =
+--  FirstException
+--    { firstExceptionCause :: String
+--    , firstExceptionClue  :: a
+--    } |
+--  SecondException
+--    { secondExceptionCause :: String
+--    , secondExceptionClue  :: a
+--    } deriving (Typeable)
+--
+-- instance Show a => (TwoException a) where
+--  ...
+-- instance (Typeable a, Show a) => Exception (TwoException a)
+--
+declareException "TwoException" ["FirstException", "SecondException"]
 
 main :: IO ()
 main = do
+  print $ ([1..4] `at` 5 :: Either SomeException Int)
   print $ MyException "hi" 10
   print $ myException "poi"
+  print $ firstException "chino"
+  print $ secondException "cocoa"
 ```
+
+- the completely example
+    - in [example/Main.hs](https://github.com/aiya000/hs-throwable-exceptions/blob/master/example/Main.hs)
 
 - - -
 
