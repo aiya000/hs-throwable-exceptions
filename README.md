@@ -1,6 +1,6 @@
 # :diamonds: throwable-exceptions :diamonds:
 [![Build Status](https://travis-ci.org/aiya000/hs-throwable-exceptions.svg?branch=master)](https://travis-ci.org/aiya000/hs-throwable-exceptions)
-[![Hackage](https://img.shields.io/hackage/v/lens.svg)](https://hackage.haskell.org/package/throwable-exceptions)
+[![Hackage](https://img.shields.io/badge/hackage-v0.1.0.x-blue.svg)](https://hackage.haskell.org/package/throwable-exceptions)
 
 `throwable-exceptions` gives an easy way to create the data types of `Exception` instance with [TemplateHaskell](https://wiki.haskell.org/Template_Haskell),
 and gives simple data types of `Exception` instance with its value constructor,
