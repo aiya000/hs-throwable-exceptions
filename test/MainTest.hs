@@ -1,7 +1,11 @@
 {-# LANGUAGE TemplateHaskell #-}
 
--- | This is referenced from README.md
-module Main where
+-- |
+-- Basic specs.
+-- And this is an example code.
+--
+-- This should be compiled without the compile error.
+module MainTest where
 
 import Control.Exception.Safe (throwM, MonadCatch, catch, SomeException)
 import Control.Exception.Throwable (GeneralException(..), generalException, IndexOutOfBoundsException(..))
@@ -11,6 +15,11 @@ import Control.Exception.Throwable.TH (declareException)
 import Control.Exception.Safe (Exception)
 import Data.Typeable (Typeable)
 {- ---------------------------------------------- -}
+
+-- For test
+import System.IO.Silently (silence)
+import Test.Tasty (TestTree)
+import Test.Tasty.HUnit (testCase, (@?=))
 
 
 -- This is same as
@@ -46,15 +55,16 @@ declareException "MyException" ["MyException"]
 declareException "TwoException" ["FirstException", "SecondException"]
 
 
-main :: IO ()
-main = do
+-- A context of IO
+main' :: IO ()
+main' = do
   print $ ([1..4] `at` 5 :: Either SomeException Int)
-  print $ MyException "hi" 10
+  print $ MyException "hi" (10 :: Int)
   print $ myException "poi"
   -- ^ a (fake) value constructor,
   -- this is same as `MyException` but without a clue value.
   print (foo :: Either SomeException Int)
-  print $ FirstException "chino" 20
+  print $ FirstException "chino" (20 :: Int)
   print $ firstException "cocoa"
   print $ secondException "rize"
 --
@@ -94,3 +104,7 @@ at xs index = do
 foo :: (MonadCatch m, Typeable a, Show a) => m a
 foo = throwM $ generalException "FooException" "poi poi poi !?"
 -- This is same as `GeneralException "FooException" "poi poi poi !?" ()`
+
+
+test_this_code_should_be_compiled_without_the_compile_error :: [TestTree]
+test_this_code_should_be_compiled_without_the_compile_error = [testCase "" $ silence main']

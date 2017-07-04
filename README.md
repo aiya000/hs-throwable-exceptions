@@ -24,7 +24,7 @@ We want to throw some exception frequently, but the mostly throwable exceptions 
 ## Examples
 
 - vvv  The summary of the exact examples is available here  vvv
-    - [example/Main.hs](https://github.com/aiya000/hs-throwable-exceptions/blob/master/example/Main.hs)
+    - [test/MainTest.hs](https://github.com/aiya000/hs-throwable-exceptions/blob/master/test/MainTest.hs)
 
 - - -
 
