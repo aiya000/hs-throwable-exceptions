@@ -10,7 +10,7 @@ module Control.Exception.Throwable.TH
   ) where
 
 import Data.Char (toLower, isUpper, isPunctuation, isNumber)
-import Language.Haskell.TH ( Bang(..), DecsQ, newName, mkName, Dec(..), TyVarBndr(..), Con(..), Type(..), SourceUnpackedness(..), SourceStrictness(..), Q, Name, Exp(..), Lit(..), Pat(..), Clause(..), Body(..))
+import Language.Haskell.TH (Bang(..), DecsQ, newName, mkName, Dec(..), TyVarBndr(..), Con(..), Type(..), SourceUnpackedness(..), SourceStrictness(..), Q, Name, Exp(..), Lit(..), Pat(..), Clause(..), Body(..))
 
 -- |
 -- Mean names of a data type and its value constructors
@@ -99,11 +99,11 @@ declareException typeName constrNames = do
       let dataDec = defineDatatype typeNames typeParam
       showInstanceDec     <- defineShowInstanceFor typeNames
       exceptionInstancDec <- defineExceptionInstanceFor typeNames
-      fakeConstructorDecs <- mapM defineFakeConstructor $ constructors typeNames
+      fakeconstructorDecs <- concat <$> mapM (defineFakeConstructor $ datatypeName typeNames) (constructors typeNames)
       return $ [ dataDec
                , showInstanceDec
                , exceptionInstancDec
-               ] ++ fakeConstructorDecs
+               ] ++ fakeconstructorDecs
   where
     -- Define a data of an exception.
     -- the data is defined by @DatatypeNames@.
@@ -165,23 +165,30 @@ declareException typeName constrNames = do
           exception      = mkName typeName
       a <- newName "a"
       return $ InstanceD Nothing
-        [ AppT (ConT typeableClass) (VarT a)
-        , AppT (ConT showClass) (VarT a)
+        [ ConT typeableClass `AppT` VarT a
+        , ConT showClass `AppT` VarT a
         ]
-        (AppT (ConT exceptionClass) (AppT (ConT exception) (VarT a)))
+        (ConT exceptionClass `AppT` ParensT (ConT exception `AppT` VarT a))
         []
 
     -- Define the casual data constructor.
     -- Like @Control.Exception.Throwable.generalException@ without name field.
-    defineFakeConstructor :: ValueConstructor -> Q Dec
-    defineFakeConstructor ValueConstructor {..} = do
-      let fConstructor = mkName $ pascalToCamelCase constructorName
+    --
+    -- Take a name of the target value constructor, and a name of its data type.
+    --
+    -- Why @DecsQ@ is returned, because splicing type signature should be avoided.
+    defineFakeConstructor :: String -> ValueConstructor -> DecsQ
+    defineFakeConstructor typeName (ValueConstructor {..}) = do
+      let datatype     = mkName typeName
+          fConstructor = mkName $ pascalToCamelCase constructorName
           constructor  = mkName constructorName
-      a <- newName "a"
-      return $ FunD fConstructor [
-          Clause [VarP a] (NormalB $ AppE (AppE (ConE constructor) (VarE a)) (TupE []))
-          []
-        ]
+      x <- newName "x"
+      let sig  = SigD fConstructor $ ArrowT `AppT` ConT (mkName "String") `AppT` (ConT datatype `AppT` TupleT 0)
+      let impl = FunD fConstructor [
+                   Clause [VarP x] (NormalB $ ConE constructor `AppE` VarE x `AppE` TupE [])
+                    []
+                 ]
+      return [sig, impl]
 
 
 -- |
