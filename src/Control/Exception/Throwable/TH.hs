@@ -142,15 +142,16 @@ declareException typeName constrNames = do
 
     -- Define an instance of a data of @DatatypeNames@ for @Show@.
     defineShowInstanceFor :: DatatypeNames -> Q Dec
-    defineShowInstanceFor dataTypeNames@(DatatypeNames {..}) = do
+    defineShowInstanceFor datatypeNames@(DatatypeNames {..}) = do
       let showClass = mkName "Show"
           exception = mkName typeName
       a <- newName "a"
-      showFuncDec <- declareShowFunc dataTypeNames
-      return $ InstanceD Nothing
-        [AppT (ConT showClass) (VarT a)]
-        (AppT (ConT showClass) (AppT (ConT exception) (VarT a)))
-        [showFuncDec]
+      showFuncDec <- declareShowFunc datatypeNames
+      return $
+        InstanceD Nothing [ConT showClass `AppT` VarT a]
+          (ConT showClass `AppT` ParensT (ConT exception `AppT` VarT a)) [
+            showFuncDec
+          ]
 
     -- Make a @show@ function definition.
     declareShowFunc :: DatatypeNames -> Q Dec
@@ -165,9 +166,9 @@ declareException typeName constrNames = do
         makeShowFuncClause (ValueConstructor {..}) showFunc = do
           let constructor = mkName constructorName
           cause <- newName "cause"
-          return $ Clause [ConP constructor [VarP cause, WildP]] -- (FooException cause _) =
+          return $ Clause [ConP constructor [VarP cause, WildP]]
             (NormalB
-                (InfixE (Just . LitE . StringL $ typeName ++ ": ") (VarE $ mkName "++") (Just $ AppE (VarE showFunc) (VarE cause))) -- show ("FooException: " ++ show cause)
+                (InfixE (Just . LitE . StringL $ typeName ++ ": ") (VarE $ mkName "++") (Just $ AppE (VarE showFunc) (VarE cause)))
             ) []
 
     -- Define an instance of a data of @DatatypeNames@ for @Exception@.
