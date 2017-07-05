@@ -70,12 +70,26 @@ getDatatypeNames typeName constrNames = fmap (DatatypeNames typeName) $ mapM toV
   where
     toValueConstructorName :: ValueConstructorName -> Maybe ValueConstructor
     toValueConstructorName [] = Nothing
-    toValueConstructorName constrName@(c:onstrName) =
-      let constrName' = (toLower c) : onstrName -- camelCase
+    toValueConstructorName constrName =
+      let constrName' = pascalToCamelCase constrName
       in Just ValueConstructor { constructorName = constrName
-                               , causeRecordName = constrName' ++ "Cause"
-                               , clueRecordName  = constrName' ++ "Clue"
+                               , causeRecordName = causeRecordName constrName'
+                               , clueRecordName  = clueRecordName constrName'
                                }
+
+    -- "ioException'" -> ("ioException", "'")
+    splitBodyAndSigns :: String -> (String, String)
+    splitBodyAndSigns = span $ not . isPunctuation
+
+    -- recordName "Cause" "ioException'" -> "ioExceptionCause'",
+    -- signs is important.
+    recordName :: String -> String -> String
+    recordName suffix constrName' =
+      let (name, signs) = splitBodyAndSigns constrName'
+      in name ++ suffix ++ signs
+
+    causeRecordName = recordName "Cause"
+    clueRecordName  = recordName "Clue"
 
 
 -- | A natural strategy of the evaluation
