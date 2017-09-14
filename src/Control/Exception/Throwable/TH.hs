@@ -7,6 +7,8 @@
 -- It has the record of "cause" and "clue".
 module Control.Exception.Throwable.TH
   ( declareException
+  , DatatypeName
+  , ValueConstructorName
   ) where
 
 import Data.Char (toLower, isUpper, isPunctuation, isNumber)
