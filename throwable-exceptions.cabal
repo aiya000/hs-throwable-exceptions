@@ -8,7 +8,7 @@ license-file:        LICENSE
 author:              aiya000
 maintainer:          aiya000.develop@gmail.com
 copyright:           aiya000
-category:            Exception
+category:            Exceptions
 build-type:          Simple
 cabal-version:       >=1.10
 extra-source-files:  README.md
